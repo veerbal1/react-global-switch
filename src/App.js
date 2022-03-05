@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import './App.css';
-import Context, { MyContext } from './Context';
 import { QueryClient, QueryClientProvider, useQuery } from 'react-query';
+import { Provider, useDispatch, useSelector } from 'react-redux';
+import store from './store';
 
 const queryClient = new QueryClient();
 
@@ -10,15 +11,14 @@ const queryClient = new QueryClient();
  */
 function App() {
     return (
-        <div>
+        <Provider store={store}>
             <QueryClientProvider client={queryClient}>
-                <Context>
-                    <h1>Global State Testing</h1>
-                    <SetID />
-                    <ParentOne />
-                </Context>
+                <h1>Global State Testing</h1>
+                <SelectedID />
+                <SetID />
+                <ParentOne />
             </QueryClientProvider>
-        </div>
+        </Provider>
     );
 }
 
@@ -54,13 +54,17 @@ const ParentThree = () => {
 };
 
 const SetID = () => {
-    const { setID } = React.useContext(MyContext);
+    const state = useSelector((state) => state.id);
+    const dispatch = useDispatch();
     // useCallback is used to prevent infinite loop
     const handleClick = React.useCallback(() => {
-        return setID(Math.floor(Math.random() * 5));
-    }, [setID]);
+        dispatch({
+            type: 'SET_ID',
+            id: Math.floor(Math.random() * 10),
+        });
+    }, []);
 
-    console.log('SetID');
+    console.log('SetID', state);
 
     return (
         <div>
@@ -71,14 +75,18 @@ const SetID = () => {
 };
 
 const CommentsOne = () => {
-    const { id } = React.useContext(MyContext);
-
-    const { data } = useQuery(['comments', id], () =>
-        fetch(`https://jsonplaceholder.typicode.com/posts/${id}/comments`).then(
-            (res) => res.json()
-        )
+    const id = useSelector((state) => state.id);
+    const { data } = useQuery(
+        ['comments', id],
+        () =>
+            fetch(
+                `https://jsonplaceholder.typicode.com/posts/${id}/comments`
+            ).then((res) => res.json()),
+        {
+            notifyOnChangeProps: ['id'],
+        }
     );
-    console.log(id, data);
+    console.log('CommentsOne', id, data);
     return (
         <div>
             <h1>Comments</h1>
@@ -92,16 +100,16 @@ const CommentsOne = () => {
 };
 
 const CommentsTwo = () => {
-    const { id } = React.useContext(MyContext);
+    const id = useSelector((state) => state.id);
 
     const { data } = useQuery(['comments', id * 2], () =>
         fetch(
             `https://jsonplaceholder.typicode.com/posts/${id * 2}/comments`
         ).then((res) => res.json())
     );
-    console.log(id * 2, data);
+    console.log('CommentsTwo', id * 2, data);
     return (
-        <div>
+        <div style={{}}>
             <h1>Comments Two</h1>
             <ul>
                 {data?.map((comment) => (
@@ -112,4 +120,12 @@ const CommentsTwo = () => {
     );
 };
 
+const SelectedID = () => {
+    const id = useSelector((state) => state.id);
+    return (
+        <h1>
+            Selected ID: {id} - {id * 2}
+        </h1>
+    );
+};
 export default App;
