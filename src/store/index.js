@@ -2,6 +2,7 @@ import { createStore } from 'redux';
 
 const initialState = {
     id: 1,
+    name: 'Veerbal',
 };
 
 const reducer = (state = initialState, action) => {
@@ -10,6 +11,11 @@ const reducer = (state = initialState, action) => {
             return {
                 ...state,
                 id: action.id,
+            };
+        case 'SET_NAME':
+            return {
+                ...state,
+                name: action.name,
             };
         default:
             return state;
